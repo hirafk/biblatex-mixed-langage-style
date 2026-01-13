@@ -1,0 +1,107 @@
+% mybibstyle.sty
+% --------------------------------------------------
+% BibLaTeX スタイル定義ファイル
+% --------------------------------------------------
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{mybibstyle}[2025/01/01 My Custom BibLaTeX Settings]
+
+% ==================================================
+% ここから設定コード 
+% ==================================================
+\RequirePackage[
+    backend=biber,
+    style=numeric,
+    minbibnames=999,
+    maxbibnames=999,
+    uniquelist=false,
+    sorting=none,
+    defernumbers=true,
+    labelnumber=true
+]{biblatex}
+% 言語マッピング
+\DeclareLanguageMapping{japanese}{english}
+
+
+% 姓名の順序設定
+\DeclareNameAlias{sortname}{family-given}
+\DeclareNameAlias{default}{family-given}
+
+% 著者名の表示形式
+% 日本語: 姓 名 (スペース区切り)
+% 英語: 姓, 名イニシャル (Einstein, A.)
+\DeclareNameFormat{default}{%
+  % 1. 名前の表示
+  \iffieldequalstr{langid}{english}
+    {\namepartfamily\space\namepartgiveni}%
+    {\namepartfamily\space\namepartgiven}%
+  \ifnumequal{\value{listcount}}{\value{liststop}}
+    {} % 最後の著者なら何もしない
+    {% 最後の著者じゃなければ区切りを入れる
+       \iffieldequalstr{langid}{english}
+         {\addcomma\space} % [英語] 半角カンマ + スペース
+         {，}%             % [日本語] 全角カンマ (スペースなし)
+    }%
+}
+
+% 複数引用の区切り（[1, 2] のコンマ）
+\DeclareDelimFormat{multicitedelim}{\addcomma\space}
+% --------------------------------------------------
+% 3. 表示形式
+% --------------------------------------------------
+\DeclareFieldFormat[article]{title}{#1}
+\DeclareFieldFormat[book]{title}{#1}
+\DeclareFieldFormat{journaltitle}{#1}
+\DeclareFieldFormat[article,book]{pages}{#1} % ページ番号の表示形式 
+\renewbibmacro{in:}{}
+%========-巻や号数、電子ジャーナにおける識別番号の表示形式についてのマクロ==========
+\DeclareFieldFormat[article]{volume}{#1}       % 巻
+\DeclareFieldFormat[article]{number}{(#1)}     % 号を括弧
+\renewbibmacro*{volume+number+eid}{%
+  \printfield{volume}%
+  \printfield{number}%
+}
+
+%======論文======================================
+\DeclareBibliographyDriver{article}{%
+  \printnames{author}%
+  \setunit{\adddot\addspace}
+  \printfield[title]{title}
+  \iffieldequalstr{langid}{english}
+    {\setunit{\adddot\space}}%  英語: 半角ピリオド+スペース
+    {\setunit{．}}%  日本語: 全角ピリオド
+  % --- 雑誌名 ---
+  \printfield[journaltitle]{journaltitle}%
+  \iffieldequalstr{langid}{english}
+    {\setunit{\adddot\space}}% 英語: 半角ピリオド+スペース
+    {\setunit{．}}% 日本語: 全角ピリオド
+  \printfield{year}%
+\setunit{\addsemicolon\space}% 半角セミコロン
+  \usebibmacro{volume+number+eid}%
+\setunit{\addcolon\space} 
+  \printfield{pages}%
+  \usebibmacro{finentry}%
+}
+%=======書籍======================================
+\DeclareBibliographyDriver{book}{%
+  \printnames{author}%
+  \setunit{\adddot\addspace}%  著者名と書名の間のピリオド
+  % --- 書名 ---
+  \printfield[title]{title}%
+  % --- 判定: 英語かどうか ---
+  \iffieldequalstr{langid}{english}
+    {\setunit{\adddot\space}}% 英語: 半角ピリオド＋スペース
+    {\setunit{．}}% 日本語: 全角ピリオド
+  \printfield{edition}%
+  \iffieldequalstr{langid}{english}
+    {\addcomma\space}
+    {\setunit{，}}
+  % --- 出版社 ---
+  \printlist{publisher}%
+  % --- 判定: 英語かどうか ---
+  \iffieldequalstr{langid}{english}
+    {\setunit{\addsemicolon\space}}% 英語: 半角セミコロン＋スペース
+    {\setunit{；}}%  日本語: 全角セミコロン
+  % --- 出版年 ---
+  \printfield{year}
+  \usebibmacro{finentry}
+}
